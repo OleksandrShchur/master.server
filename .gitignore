@@ -30,3 +30,6 @@ _ReSharper*/
 .vs/
 #Nuget packages folder
 packages/
+/__pycache__/
+/master/Lib/site-packages/
+/master/Core/__pycache__/solver_static_formula.cpython-311.pyc
