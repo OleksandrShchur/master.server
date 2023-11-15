@@ -11,8 +11,6 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 def second_order_euler():
     json_data = request.get_json()
 
-    print(json_data)
-
     step = float(json_data['step'])
     t_0 = float(json_data['t_0'])
     t_end = float(json_data['t_end'])
@@ -23,7 +21,7 @@ def second_order_euler():
     f_func = json_data['f_func']
     phi_func = json_data['phi_func']
 
-    differential_second_solver = solver_static_formula.SolverSecondDifferential(step, t_0, t_end, alpha, beta, tau, 0, 1, 2)
+    differential_second_solver = solver_static_formula.SolverSecondDifferential(step, t_0, t_end, alpha, beta, tau, f_func, phi_func, method)
 
     if method == 0:
         result = differential_second_solver.ger_result_euler_cust()

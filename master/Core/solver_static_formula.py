@@ -1,18 +1,24 @@
 import math
 import numpy as np
+import cexprtk
 
 class SolverSecondDifferential:
 
-    def __init__(self, h, t_0, t_end, alpha, beta, tau, method, f_func, phi_func):
+    def __init__(self, h, t_0, t_end, alpha, beta, tau, f_expr, phi_expr, method):
         self.t_step = np.arange(t_0, t_end + h, h)
         self.m = int((t_end - t_0)/h) + 1
-        print(self.m)
         self.x_step = [0] * self.m
+
         self.tau = tau
-        self.a = alpha
-        self.b = beta
+        self.alpha = alpha
+        self.beta = beta
         self.h = h
         self.t_0 = t_0
+
+        self.f_expression = f_expr
+        self.phi_expression = phi_expr
+        self.method = method
+
 
     def runge_kutta_4(self, func1, func2, y0, y1, t0, t_end, h):
         t_values = [t0]
@@ -92,7 +98,7 @@ class SolverSecondDifferential:
         return result
     
     def ger_result_euler_cust(self):
-        k = 0;
+        k = 0
         x_tochne = [0] * self.m
         self.x_step[0] = self.phi_func(self.t_0)
         x_tochne[0] = self.exact(self.t_step[0])
@@ -111,23 +117,23 @@ class SolverSecondDifferential:
         return result
 
     def f_lessThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.a * x_i + self.b * self.phi_func(t_i - self.tau) + self.f_func(t_i))
+        return x_i + h * (self.alpha * x_i + self.beta * self.phi_func(t_i - self.tau) + self.f_func(t_i))
 
     def f_moreThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.a * x_i + self.b * self.v(t_i) + self.f_func(t_i))
+        return x_i + h * (self.alpha * x_i + self.beta * self.v(t_i) + self.f_func(t_i))
 
     def phi_func(self, x):
-        return x + 4
+        return cexprtk.evaluate_expression(self.phi_expression, {"x": x})
 
     def f_func(self, t_i):
-        return t_i - 1
+        return cexprtk.evaluate_expression(self.f_expression, {"x": t_i})
 
     def v(self, t_i):
         for i in range(len(self.t_step)):
             if (t_i - self.tau >= self.t_step[i] and t_i - self.tau <= self.t_step[i + 1]):
                     return (t_i - self.tau - self.t_step[i])/self.h * self.x_step[i+1] + (self.t_step[i+1] - t_i + self.tau)/self.h * self.x_step[i]
 
-        return 0;
+        return 0
 
     def exact(self, t):
         if (t < 0):
