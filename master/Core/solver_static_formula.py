@@ -3,14 +3,14 @@ import numpy as np
 
 class SolverSecondDifferential:
 
-    def __init__(self, h, t_0, t_end, a, b, tau):
+    def __init__(self, h, t_0, t_end, alpha, beta, tau, method, f_func, phi_func):
         self.t_step = np.arange(t_0, t_end + h, h)
         self.m = int((t_end - t_0)/h) + 1
         print(self.m)
         self.x_step = [0] * self.m
         self.tau = tau
-        self.a = a
-        self.b = b
+        self.a = alpha
+        self.b = beta
         self.h = h
         self.t_0 = t_0
 
@@ -94,7 +94,7 @@ class SolverSecondDifferential:
     def ger_result_euler_cust(self):
         k = 0;
         x_tochne = [0] * self.m
-        self.x_step[0] = self.phi(self.t_0)
+        self.x_step[0] = self.phi_func(self.t_0)
         x_tochne[0] = self.exact(self.t_step[0])
         for i in range(1, len(self.t_step)):
             if (self.t_step[i - 1] - self.tau <= 0):
@@ -111,15 +111,15 @@ class SolverSecondDifferential:
         return result
 
     def f_lessThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.a * x_i + self.b * self.phi(t_i - self.tau) + self.func(t_i))
+        return x_i + h * (self.a * x_i + self.b * self.phi_func(t_i - self.tau) + self.f_func(t_i))
 
     def f_moreThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.a * x_i + self.b * self.v(t_i) + self.func(t_i))
+        return x_i + h * (self.a * x_i + self.b * self.v(t_i) + self.f_func(t_i))
 
-    def phi(self, x):
+    def phi_func(self, x):
         return x + 4
 
-    def func(self, t_i):
+    def f_func(self, t_i):
         return t_i - 1
 
     def v(self, t_i):
