@@ -14,16 +14,17 @@ def second_order_euler():
     h = float(json_data['h'])
     t_0 = float(json_data['t_0'])
     t_end = float(json_data['t_end'])
-    y_0 = float(json_data['y_0'])
-    y_1 = float(json_data['y_1'])
+    m = (t_end - t_0)/h
+    a = float(json_data['y_0'])
+    b = float(json_data['y_1'])
     method = int(json_data['method'])
 
-    differential_second_solver = solver_static_formula.SolverSecondDifferential()
+    differential_second_solver = solver_static_formula.SolverSecondDifferential(h, t_0, t_end, a, b, tau=1)
 
     if method == 0:
-        result = differential_second_solver.get_result_euler(h, t_0, t_end, y_0, y_1)
+        result = differential_second_solver.ger_result_euler_cust()
     else:
-        result = differential_second_solver.get_result_runge(h, t_0, t_end, y_0, y_1)
+        result = differential_second_solver.get_result_runge(h, t_0, t_end, a, b)
 
     return str(result)
 
