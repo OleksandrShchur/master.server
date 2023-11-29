@@ -4,10 +4,11 @@ import cexprtk
 
 class SolverSecondDifferential:
 
-    def __init__(self, h, t_0, t_end, alpha, beta, tau, f_expr, phi_expr, method):
+    def __init__(self, h, t_0, t_end, alpha, beta, tau, f_expr, phi_expr):
         self.t_step = np.arange(t_0, t_end + h, h)
         self.m = int((t_end - t_0)/h) + 1
         self.x_step = [0] * self.m
+        self.x_step_kutta = [0] * self.m
 
         self.tau = tau
         self.alpha = alpha
@@ -17,7 +18,6 @@ class SolverSecondDifferential:
 
         self.f_expression = f_expr
         self.phi_expression = phi_expr
-        self.method = method
 
 
     def runge_kutta_4(self, func1, func2, y0, y1, t0, t_end, h):
@@ -104,29 +104,50 @@ class SolverSecondDifferential:
         x_tochne[0] = self.exact(self.t_step[0])
         for i in range(1, len(self.t_step)):
             if (self.t_step[i - 1] - self.tau <= 0):
-                self.x_step[i] = self.f_lessThanZero(self.x_step[i - 1], self.t_step[i], self.h);
+                self.x_step[i] = self.f_lessThanZero(self.x_step[i - 1], self.t_step[i-1], self.h);
+                self.x_step_kutta[i] = self.f_lessThanZeroKutta(self.x_step[i - 1], self.t_step[i-1], self.h);
             else:
-                self.x_step[i] = self.f_moreThanZero(self.x_step[i - 1], self.t_step[i], self.h);
+                self.x_step[i] = self.f_moreThanZero(self.x_step[i - 1], self.t_step[i-1], self.h);
+                self.x_step_kutta[i] = self.f_moreThanZeroKutta(self.x_step[i - 1], self.t_step[i-1], self.h);
             x_tochne[i] = self.exact(self.t_step[i])
 
         # Вивід результатів
         result = []
         for i in range(len(self.t_step)):
-            result.append([self.t_step[i], self.x_step[i], x_tochne[i]])
+            result.append([self.t_step[i], x_tochne[i], self.x_step[i], self.x_step_kutta[i]])
 
         return result
 
+    def f_lessThanZeroKutta(self, x_i, t_i, h):
+        K_1 = self.equation(t_i, x_i, self.phi_func(t_i - self.tau))
+        K_2 = self.equation(t_i + self.h/2, x_i + h/2*K_1, self.phi_func(t_i + self.h/2 - self.tau) + h/2*K_1)
+        K_3 = self.equation(t_i + self.h/2, x_i + h/2*K_2, self.phi_func(t_i + self.h/2 - self.tau) + h/2*K_2)
+        K_4 = self.equation(t_i + self.h, x_i + h*K_3, self.phi_func(t_i + self.h - self.tau) + h*K_3)
+
+        return x_i + h / 6 * (K_1 + 2*K_2 + 2 * K_3 + K_4)
+
+    def f_moreThanZeroKutta(self, x_i, t_i, h):
+        K_1 = self.equation(t_i, x_i, self.v(t_i))
+        K_2 = self.equation(t_i + self.h/2, x_i + h/2*K_1, self.v(t_i + self.h/2) + h/2*K_1)
+        K_3 = self.equation(t_i + self.h/2, x_i + h/2*K_2, self.v(t_i + self.h/2) + h/2*K_2)
+        K_4 = self.equation(t_i + self.h, x_i + h*K_3, self.v(t_i + self.h) + h*K_3)
+
+        return x_i + h / 6 * (K_1 + 2*K_2 + 2 * K_3 + K_4)
+    
     def f_lessThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.alpha * x_i + self.beta * self.phi_func(t_i - self.tau) + self.f_func(t_i))
+        return x_i + h * self.equation(t_i, x_i, self.phi_func(t_i - self.tau))
 
     def f_moreThanZero(self, x_i, t_i, h):
-        return x_i + h * (self.alpha * x_i + self.beta * self.v(t_i) + self.f_func(t_i))
+        return x_i + h * self.equation(t_i, x_i, self.v(t_i))
+    
+    def equation(self, t_i, x_i, v_i):
+        return self.alpha * x_i + self.beta * v_i + self.f_func(t_i)
 
     def phi_func(self, x):
         return cexprtk.evaluate_expression(self.phi_expression, {"x": x})
 
     def f_func(self, t_i):
-        return cexprtk.evaluate_expression(self.f_expression, {"x": t_i})
+        return cexprtk.evaluate_expression(self.f_expression, {"t": t_i})
 
     def v(self, t_i):
         for i in range(len(self.t_step)):

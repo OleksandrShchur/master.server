@@ -17,16 +17,12 @@ def second_order_euler():
     alpha = float(json_data['alpha'])
     beta = float(json_data['beta'])
     tau = float(json_data['tau'])
-    method = int(json_data['method'])
     f_func = json_data['f_func']
     phi_func = json_data['phi_func']
 
-    differential_second_solver = solver_static_formula.SolverSecondDifferential(step, t_0, t_end, alpha, beta, tau, f_func, phi_func, method)
+    differential_second_solver = solver_static_formula.SolverSecondDifferential(step, t_0, t_end, alpha, beta, tau, f_func, phi_func)
 
-    if method == 0:
-        result = differential_second_solver.ger_result_euler_cust()
-    else:
-        result = differential_second_solver.get_result_runge(step, t_0, t_end, alpha, beta)
+    result = differential_second_solver.ger_result_euler_cust()
 
     return str(result)
 
